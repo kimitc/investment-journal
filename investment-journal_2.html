@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投资复盘日志 v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#F7F5F0; --surface:#fff; --surface2:#F0EDE6; --surface3:#E8E4DC;
+  --border:rgba(60,50,30,.12); --border2:rgba(60,50,30,.22);
+  --text:#1C1810; --text2:#6B6355; --text3:#9E9589;
+  --accent:#1A3A5C; --accent-light:#E8EEF5;
+  --win:#2D6A2D; --win-bg:#EAF3E5;
+  --lose:#9B2222; --lose-bg:#F7EAEA;
+  --warn:#7A4A08; --warn-bg:#F5EBDA;
+  --serif:'DM Serif Display',Georgia,serif;
+  --sans:'Noto Sans SC',system-ui,sans-serif;
+  --mono:'DM Mono',monospace;
+  --radius:10px; --radius-lg:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.6}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+
+/* ── Shell ── */
+.shell{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow:hidden}
+.logo{padding:24px 20px 18px;border-bottom:1px solid var(--border)}
+.logo-title{font-family:var(--serif);font-size:20px;color:var(--accent);letter-spacing:-.3px}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px;letter-spacing:.3px}
+.nav{padding:12px 8px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;padding:0 12px;margin:14px 0 5px}
+.nav-label:first-child{margin-top:0}
+.nav-btn{display:flex;align-items:center;gap:9px;width:100%;padding:8px 12px;border:none;background:transparent;border-radius:8px;font-family:var(--sans);font-size:13px;color:var(--text2);cursor:pointer;text-align:left;transition:all .15s}
+.nav-btn svg{width:15px;height:15px;flex-shrink:0;opacity:.65}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav-btn.active svg{opacity:1}
+.sidebar-footer{padding:14px 20px;border-top:1px solid var(--border);font-size:11px;color:var(--text3);line-height:1.6}
+
+/* ── Main ── */
+.main{padding:36px 44px;overflow-y:auto}
+.view{display:none;animation:fadeIn .2s ease}
+.view.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
+.page-title{font-family:var(--serif);font-size:30px;color:var(--text);letter-spacing:-.4px}
+.page-sub{font-size:13px;color:var(--text3);margin-top:3px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-family:var(--sans);font-size:13px;font-weight:500;border-radius:8px;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn svg{width:14px;height:14px}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#142e4a}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text)}
+.btn-sm{padding:4px 10px;font-size:11px;background:transparent;border:1px solid var(--border2);border-radius:20px;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn-sm:hover{background:var(--surface2);color:var(--text)}
+.btn-sm:disabled{opacity:.4;cursor:not-allowed}
+.btn-danger{color:var(--lose);border-color:var(--lose-bg)}
+.btn-danger:hover{background:var(--lose-bg)}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:16px}
+.card-title{font-family:var(--serif);font-size:17px;margin-bottom:12px}
+.card-sm{padding:14px 18px}
+
+/* ── Stats grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.stat-label{font-size:10px;color:var(--text3);letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:500}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.c-win{color:var(--win)}.c-lose{color:var(--lose)}.c-accent{color:var(--accent)}.c-warn{color:var(--warn)}
+
+/* ── Badge ── */
+.badge{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;letter-spacing:.2px}
+.b-win{background:var(--win-bg);color:var(--win)}
+.b-lose{background:var(--lose-bg);color:var(--lose)}
+.b-buy{background:var(--accent-light);color:var(--accent)}
+.b-sell{background:#F5EAE8;color:#7A2A1A}
+.b-watch{background:var(--warn-bg);color:var(--warn)}
+.b-us{background:#EBF2FB;color:#1A4A8A}
+.b-hk{background:#FAECEA;color:#8A2A1A}
+.b-cn{background:var(--win-bg);color:var(--win)}
+
+/* ── Error tags ── */
+.etag{display:inline-block;font-size:10px;font-weight:500;padding:2px 7px;border-radius:4px;margin:2px 2px 0 0}
+.et-emotion{background:#F5EAF0;color:#6B2050}
+.et-logic{background:#EEEDF8;color:#3C3489}
+.et-timing{background:var(--warn-bg);color:var(--warn)}
+.et-sizing{background:var(--accent-light);color:var(--accent)}
+.et-overconfident{background:#FDF3E3;color:#7A4A08}
+
+/* ── Trade cards ── */
+.trade-list{display:flex;flex-direction:column;gap:14px}
+.trade-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;transition:box-shadow .2s}
+.trade-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.07)}
+.trade-accent{height:3px}
+.trade-body{padding:18px 22px}
+.trade-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.trade-name{font-family:var(--serif);font-size:18px;letter-spacing:-.2px}
+.trade-meta{font-size:11px;color:var(--text3);margin-top:2px}
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.pnl-big{font-family:var(--mono);font-size:24px;font-weight:500;margin-bottom:3px}
+.price-row{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.divider{height:1px;background:var(--border);margin:14px 0}
+.field-label{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.7px;text-transform:uppercase;margin-bottom:4px}
+.field-text{font-size:13px;line-height:1.7;color:var(--text2);margin-bottom:12px}
+.ai-box{background:var(--accent-light);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:10px 13px;margin-top:6px}
+.ai-box-label{font-size:10px;font-weight:500;color:var(--accent);letter-spacing:.7px;text-transform:uppercase;margin-bottom:4px}
+.ai-box-text{font-size:13px;line-height:1.75;color:var(--text)}
+.loading-inline{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--text3);padding:8px 0}
+.spinner{width:13px;height:13px;border:1.5px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Chart screenshot ── */
+.chart-img-wrap{margin-top:10px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.chart-img-wrap img{width:100%;display:block;max-height:240px;object-fit:cover;cursor:pointer}
+.chart-upload-area{border:1.5px dashed var(--border2);border-radius:8px;padding:14px;text-align:center;margin-top:10px;cursor:pointer;font-size:12px;color:var(--text3);transition:all .15s}
+.chart-upload-area:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+/* ── MFE/MAE display ── */
+.mfe-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.mfe-card{padding:8px 12px;border-radius:8px;font-size:12px}
+.mfe-label{color:var(--text3);margin-bottom:2px;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+.mfe-val{font-family:var(--mono);font-size:16px;font-weight:500}
+
+/* ── Form ── */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:26px 30px;margin-bottom:20px}
+.form-title{font-family:var(--serif);font-size:20px;margin-bottom:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group.third{grid-column:span 1}
+.form-label{font-size:11px;font-weight:500;color:var(--text2);letter-spacing:.2px}
+input,select,textarea{font-family:var(--sans);font-size:13px;color:var(--text);background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:8px 11px;width:100%;transition:border-color .15s;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:#fff}
+textarea{resize:vertical;min-height:68px;line-height:1.6}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239E9589' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.form-actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.tip-box{padding:10px 13px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2);line-height:1.7}
+
+/* ── Filter bar ── */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.filter-btn{padding:5px 12px;font-size:12px;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.filter-btn.active,.filter-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+.filter-input{padding:5px 11px;font-size:12px;border:1px solid var(--border2);border-radius:20px;background:var(--surface);color:var(--text);font-family:var(--sans);outline:none;width:160px}
+.filter-input:focus{border-color:var(--accent)}
+
+/* ── Calendar view ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:16px}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.cal-day-name{text-align:center;font-size:11px;color:var(--text3);font-weight:500;padding:4px 0}
+.cal-day{min-height:64px;border-radius:8px;border:1px solid var(--border);background:var(--surface);padding:6px 8px;position:relative;cursor:pointer;transition:all .15s}
+.cal-day:hover{border-color:var(--border2)}
+.cal-day.empty{background:transparent;border-color:transparent;cursor:default}
+.cal-day.has-trades{border-color:var(--border2)}
+.cal-day.win-day{background:var(--win-bg);border-color:#b8ddb8}
+.cal-day.lose-day{background:var(--lose-bg);border-color:#ddb8b8}
+.cal-date{font-size:11px;font-weight:500;color:var(--text3)}
+.cal-pnl{font-size:12px;font-family:var(--mono);margin-top:4px}
+.cal-count{font-size:10px;color:var(--text3);margin-top:2px}
+.cal-nav{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+.cal-month{font-family:var(--serif);font-size:20px}
+.cal-nav-btn{padding:5px 12px;font-size:13px;border:1px solid var(--border2);border-radius:8px;background:var(--surface);cursor:pointer;font-family:var(--sans);color:var(--text2);transition:all .15s}
+.cal-nav-btn:hover{background:var(--surface2)}
+
+/* ── P&L Chart ── */
+.chart-container{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:16px}
+.chart-tabs{display:flex;gap:2px;background:var(--surface2);border-radius:8px;padding:3px;margin-bottom:20px;width:fit-content}
+.chart-tab{padding:5px 14px;border-radius:6px;font-size:12px;color:var(--text2);cursor:pointer;border:none;background:transparent;font-family:var(--sans);transition:all .15s}
+.chart-tab.active{background:var(--surface);color:var(--text);font-weight:500;border:1px solid var(--border)}
+
+/* ── Daily diary ── */
+.diary-list{display:flex;flex-direction:column;gap:12px}
+.diary-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px}
+.diary-date{font-family:var(--mono);font-size:12px;color:var(--text3);margin-bottom:8px}
+.diary-mood{display:flex;gap:8px;margin-bottom:10px}
+.mood-btn{padding:4px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;font-size:12px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.mood-btn.active-good{background:var(--win-bg);border-color:var(--win);color:var(--win)}
+.mood-btn.active-bad{background:var(--lose-bg);border-color:var(--lose);color:var(--lose)}
+.mood-btn.active-neutral{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.diary-text{font-size:13px;line-height:1.8;color:var(--text2);white-space:pre-wrap}
+.diary-add{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:16px 20px;background:var(--surface);margin-bottom:12px}
+
+/* ── Sector breakdown ── */
+.sector-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.sector-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
+.sector-name{font-size:12px;font-weight:500;margin-bottom:8px}
+.sector-bar-track{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:6px}
+.sector-bar-fill{height:100%;border-radius:3px}
+.sector-stats{display:flex;justify-content:space-between;font-size:11px;color:var(--text3)}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,16,8,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-box{background:var(--surface);border-radius:16px;padding:26px 30px;width:100%;max-width:660px;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:var(--serif);font-size:20px;margin-bottom:18px}
+.modal-actions{display:flex;gap:10px;margin-top:16px}
+/* Image lightbox */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+.lightbox img{max-width:90vw;max-height:90vh;border-radius:8px}
+
+/* ── Settings ── */
+.step-header{display:flex;align-items:flex-start;gap:12px}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;margin-top:2px}
+.step-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.storage-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 18px;margin-bottom:18px}
+.ss-item{display:flex;align-items:center;gap:9px;flex:1}
+.ss-dot{width:9px;height:9px;border-radius:50%;background:var(--border2);transition:background .3s;flex-shrink:0}
+.ss-dot.on{background:var(--win);box-shadow:0 0 0 3px var(--win-bg)}
+.ss-dot.warn{background:var(--warn);box-shadow:0 0 0 3px var(--warn-bg)}
+.ss-lbl{font-size:10px;color:var(--text3)}
+.ss-val{font-size:12px;font-weight:500;color:var(--text2)}
+.ss-sep{color:var(--border2);font-size:16px}
+
+/* ── Empty ── */
+.empty{text-align:center;padding:50px 20px;color:var(--text3)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty-title{font-family:var(--serif);font-size:18px;color:var(--text2);margin-bottom:5px}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-title">复盘日志</div>
+    <div class="logo-sub">Investment Review Journal v2</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-label">概览</div>
+    <button class="nav-btn active" onclick="showView('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      仪表盘
+    </button>
+    <button class="nav-btn" onclick="showView('calendar',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      日历视图
+    </button>
+    <button class="nav-btn" onclick="showView('charts',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      P&L 曲线
+    </button>
+
+    <div class="nav-label">记录</div>
+    <button class="nav-btn" onclick="showView('log',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      交易记录
+    </button>
+    <button class="nav-btn" onclick="showView('add',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+      记录新交易
+    </button>
+    <button class="nav-btn" onclick="showView('diary',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      每日日记
+    </button>
+
+    <div class="nav-label">分析</div>
+    <button class="nav-btn" onclick="showView('sectors',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
+      板块分析
+    </button>
+    <button class="nav-btn" onclick="showView('insights',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386z"/></svg>
+      AI 洞察
+    </button>
+    <button class="nav-btn" onclick="showView('errors',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      错误模式
+    </button>
+
+    <div class="nav-label">系统</div>
+    <button class="nav-btn" onclick="showView('settings',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+      设置
+    </button>
+  </nav>
+  <div class="sidebar-footer">数据存于本地 + Google Drive<br>所有记录私密，不共享</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="view active" id="view-dashboard">
+  <div class="page-header">
+    <div><div class="page-title">仪表盘</div><div class="page-sub" id="dash-sub">加载中...</div></div>
+    <button class="btn btn-primary" onclick="showView('add',document.querySelectorAll('.nav-btn')[4])">+ 记录新交易</button>
+  </div>
+  <div class="stats-grid" id="statsGrid"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+    <div class="chart-container" style="margin-bottom:0">
+      <div class="card-title">资金曲线</div>
+      <canvas id="miniCurveChart" height="120"></canvas>
+    </div>
+    <div class="chart-container" style="margin-bottom:0">
+      <div class="card-title">板块盈亏分布</div>
+      <canvas id="sectorChart" height="120"></canvas>
+    </div>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="card-title" style="margin:0">最近交易</div>
+      <button class="btn-sm" onclick="showView('log',document.querySelectorAll('.nav-btn')[3])">查看全部</button>
+    </div>
+    <div id="recentTrades"></div>
+  </div>
+</div>
+
+<!-- ═══ CALENDAR ═══ -->
+<div class="view" id="view-calendar">
+  <div class="page-header">
+    <div><div class="page-title">日历视图</div><div class="page-sub">每天盈亏一目了然</div></div>
+  </div>
+  <div class="cal-nav">
+    <button class="cal-nav-btn" onclick="calPrev()">← 上月</button>
+    <div class="cal-month" id="calMonth"></div>
+    <button class="cal-nav-btn" onclick="calNext()">下月 →</button>
+  </div>
+  <div class="cal-header" id="calDayNames"></div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div class="card" id="calDayDetail" style="margin-top:16px;display:none"></div>
+</div>
+
+<!-- ═══ P&L CHARTS ═══ -->
+<div class="view" id="view-charts">
+  <div class="page-header">
+    <div><div class="page-title">P&L 曲线</div><div class="page-sub">绩效指标与资金走势分析</div></div>
+  </div>
+  <div class="chart-tabs" style="margin-bottom:20px">
+    <button class="chart-tab active" onclick="switchChartTab('curve',this)">资金曲线</button>
+    <button class="chart-tab" onclick="switchChartTab('monthly',this)">月度盈亏</button>
+    <button class="chart-tab" onclick="switchChartTab('dist',this)">盈亏分布</button>
+    <button class="chart-tab" onclick="switchChartTab('mfe',this)">MFE / MAE</button>
+  </div>
+  <div class="chart-container">
+    <canvas id="mainChart" height="260"></canvas>
+  </div>
+  <div class="stats-grid" id="perfStats" style="grid-template-columns:repeat(4,1fr)"></div>
+</div>
+
+<!-- ═══ TRADE LOG ═══ -->
+<div class="view" id="view-log">
+  <div class="page-header">
+    <div><div class="page-title">交易记录</div><div class="page-sub">完整历史 · 点击标的名称展开详情</div></div>
+    <button class="btn btn-primary" onclick="showView('add',document.querySelectorAll('.nav-btn')[4])">+ 记录新交易</button>
+  </div>
+  <div class="filter-bar">
+    <span style="font-size:12px;color:var(--text3)">筛选：</span>
+    <button class="filter-btn active" onclick="setFilter('all',this)">全部</button>
+    <button class="filter-btn" onclick="setFilter('win',this)">盈利</button>
+    <button class="filter-btn" onclick="setFilter('lose',this)">亏损</button>
+    <button class="filter-btn" onclick="setFilter('us',this)">美股</button>
+    <button class="filter-btn" onclick="setFilter('hk',this)">港股</button>
+    <button class="filter-btn" onclick="setFilter('cn',this)">A股</button>
+    <button class="filter-btn" onclick="setFilter('ai',this)">AI/半导体</button>
+    <button class="filter-btn" onclick="setFilter('consumer',this)">大消费</button>
+    <button class="filter-btn" onclick="setFilter('internet',this)">互联网</button>
+    <input class="filter-input" id="searchInput" placeholder="搜索标的名称..." oninput="renderTrades()">
+  </div>
+  <div class="trade-list" id="tradeList"></div>
+</div>
+
+<!-- ═══ ADD TRADE ═══ -->
+<div class="view" id="view-add">
+  <div class="page-header">
+    <div><div class="page-title">记录新交易</div><div class="page-sub">信息越详细，AI 复盘越有价值</div></div>
+  </div>
+  <div class="form-card">
+    <div class="form-title">基本信息</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">股票名称 / 代码</label><input id="f-stock" placeholder="如：英伟达 NVDA"></div>
+      <div class="form-group"><label class="form-label">市场</label>
+        <select id="f-market"><option value="us">🇺🇸 美股</option><option value="hk">🇭🇰 港股</option><option value="cn">🇨🇳 A股</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">操作方向</label>
+        <select id="f-dir"><option value="buy">买入 / 做多</option><option value="sell">卖出 / 减仓</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">所属板块</label>
+        <select id="f-sector"><option value="ai">AI / 半导体 / 光模块</option><option value="consumer">大消费（白酒/运动/电商）</option><option value="internet">互联网科技</option><option value="macro">宏观 / ETF</option><option value="other">其他</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">入场价格</label><input id="f-entry" type="number" step="0.01" placeholder="买入价"></div>
+      <div class="form-group"><label class="form-label">出场 / 当前价格</label><input id="f-exit" type="number" step="0.01" placeholder="卖出价或现价"></div>
+      <div class="form-group"><label class="form-label">最高浮盈价（MFE，选填）</label><input id="f-mfe" type="number" step="0.01" placeholder="持仓期间最高价"></div>
+      <div class="form-group"><label class="form-label">最大浮亏价（MAE，选填）</label><input id="f-mae" type="number" step="0.01" placeholder="持仓期间最低价"></div>
+      <div class="form-group"><label class="form-label">持有天数（选填）</label><input id="f-days" type="number" placeholder="从建仓到复盘的天数"></div>
+      <div class="form-group"><label class="form-label">交易日期</label><input id="f-date" type="date"></div>
+      <div class="form-group full"><label class="form-label">入场逻辑 — 当时为什么做这笔交易？</label>
+        <textarea id="f-logic" placeholder="说明基本面判断、技术信号、宏观背景、仓位大小等。越具体越好，三个月后你会庆幸自己写了这个。"></textarea>
+      </div>
+      <div class="form-group full"><label class="form-label">实际结果 — 事后发生了什么？</label>
+        <textarea id="f-result" placeholder="描述价格走势、关键事件、你的持仓动作、最终盈亏等。"></textarea>
+      </div>
+      <div class="form-group full"><label class="form-label">自我反思 — 哪里做对了或做错了？</label>
+        <textarea id="f-reflect" placeholder="诚实面对决策失误或情绪影响。这是复盘最核心的部分。"></textarea>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">附上 K 线图截图（选填）</label>
+        <div class="chart-upload-area" onclick="document.getElementById('f-chart-file').click()">
+          📸 点击上传入场时的 K 线截图（TradingView / 富途 / 东方财富等）
+          <input type="file" id="f-chart-file" accept="image/*" style="display:none" onchange="previewChart(event)">
+        </div>
+        <div id="chartPreview"></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-primary" onclick="submitTrade()">提交并请求 AI 复盘 ↗</button>
+      <button class="btn btn-ghost" onclick="clearForm()">清空</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DIARY ═══ -->
+<div class="view" id="view-diary">
+  <div class="page-header">
+    <div><div class="page-title">每日日记</div><div class="page-sub">记录市场感受和心理状态，帮助改善交易心态</div></div>
+    <button class="btn btn-primary" onclick="openDiaryEditor()">+ 写今天的日记</button>
+  </div>
+  <div class="diary-list" id="diaryList"></div>
+</div>
+
+<!-- ═══ SECTORS ═══ -->
+<div class="view" id="view-sectors">
+  <div class="page-header">
+    <div><div class="page-title">板块分析</div><div class="page-sub">美股 / A股 / 港股 × 各板块执行质量对比</div></div>
+  </div>
+  <div class="sector-grid" id="sectorGrid"></div>
+  <div class="card">
+    <div class="card-title">板块 × 市场交叉分析</div>
+    <canvas id="sectorMarketChart" height="180"></canvas>
+  </div>
+</div>
+
+<!-- ═══ INSIGHTS ═══ -->
+<div class="view" id="view-insights">
+  <div class="page-header">
+    <div><div class="page-title">AI 综合洞察</div><div class="page-sub">基于全部记录，分析投资模式和改进方向</div></div>
+    <button class="btn btn-primary" id="insightBtn" onclick="generateInsight()">生成综合分析 ↗</button>
+  </div>
+  <div class="card">
+    <div class="card-title">综合复盘报告</div>
+    <div id="insightBody" style="font-size:13px;color:var(--text3);line-height:1.8">点击右上角生成分析报告。AI 将找出你的优势、系统性问题和改进建议。</div>
+  </div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin:0">本周操作策略</div>
+      <button class="btn-sm" onclick="generateWeekly()">生成本周策略 ↗</button>
+    </div>
+    <div id="weeklyBody" style="font-size:13px;color:var(--text3);line-height:1.8;white-space:pre-wrap">点击生成覆盖美股/A股/港股三市的本周操作建议。</div>
+  </div>
+</div>
+
+<!-- ═══ ERRORS ═══ -->
+<div class="view" id="view-errors">
+  <div class="page-header">
+    <div><div class="page-title">错误模式分析</div><div class="page-sub">了解自己最容易犯的错，是提升的第一步</div></div>
+  </div>
+  <div id="errorCard" class="card"></div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div class="view" id="view-settings">
+  <div class="page-header"><div><div class="page-title">设置</div><div class="page-sub">数据存储 · API 配置 · 备份管理</div></div></div>
+  <div class="storage-bar">
+    <div class="ss-item"><div class="ss-dot" id="dot-local"></div><div><div class="ss-lbl">本地存储</div><div class="ss-val" id="ss-local">—</div></div></div>
+    <div class="ss-sep">+</div>
+    <div class="ss-item"><div class="ss-dot" id="dot-drive"></div><div><div class="ss-lbl">Google Drive</div><div class="ss-val" id="ss-drive">未连接</div></div></div>
+    <div class="ss-sep">+</div>
+    <div class="ss-item"><div class="ss-dot" id="dot-ai"></div><div><div class="ss-lbl">Claude AI</div><div class="ss-val" id="ss-ai">未配置</div></div></div>
+  </div>
+  <div class="form-card">
+    <div class="step-header"><div class="step-num">1</div><div><div class="form-title" style="margin:0">本地备份</div><div class="step-sub">数据实时存 localStorage，建议每月手动导出 JSON 备份</div></div></div>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="exportData()">⬇ 导出备份</button>
+      <button class="btn btn-ghost" style="position:relative">⬆ 导入数据<input type="file" accept=".json" onchange="handleImport(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%"></button>
+      <button class="btn btn-ghost btn-danger" onclick="clearAllData()">清空全部</button>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="step-header"><div class="step-num">2</div><div><div class="form-title" style="margin:0">Google Drive 云同步</div><div class="step-sub">自动备份到你的 Drive，换设备也能恢复</div></div></div>
+    <div id="gdrive-setup" style="margin-top:16px">
+      <details style="margin-bottom:14px"><summary style="font-size:13px;font-weight:500;color:var(--accent);cursor:pointer">📖 如何获取 Google Client ID（点击展开）</summary>
+        <div class="tip-box" style="margin-top:10px;line-height:1.9">1. <a href="https://console.cloud.google.com" target="_blank" style="color:var(--accent)">Google Cloud Console</a> → 新建项目<br>2. API和服务 → 启用 Google Drive API<br>3. 凭据 → 创建凭据 → OAuth客户端ID → Web应用<br>4. 已授权的JS来源填你的 GitHub Pages 网址<br>5. 复制客户端ID粘贴到下方</div>
+      </details>
+      <div class="form-group" style="max-width:500px;margin-bottom:12px"><label class="form-label">Google OAuth Client ID</label><input id="gClientId" placeholder="xxx.apps.googleusercontent.com" style="font-family:var(--mono);font-size:12px"></div>
+      <div class="form-actions"><button class="btn btn-primary" onclick="initGoogleDrive()">连接 Google Drive</button></div>
+      <div id="gdrive-status" style="font-size:12px;margin-top:10px;color:var(--text3)"></div>
+    </div>
+    <div id="gdrive-connected" style="display:none;margin-top:16px">
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--win-bg);border-radius:8px;margin-bottom:12px">
+        <span>✅</span><div><div style="font-size:13px;font-weight:500;color:var(--win)">已连接</div><div style="font-size:12px;color:var(--win)" id="gdrive-email"></div></div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="syncToDrive(false)">☁ 立即同步</button>
+        <button class="btn btn-ghost" onclick="loadFromDrive()">⬇ 从 Drive 恢复</button>
+        <button class="btn btn-ghost" onclick="disconnectDrive()">断开</button>
+      </div>
+      <div id="sync-status" style="font-size:12px;margin-top:8px;color:var(--text3)"></div>
+    </div>
+  </div>
+  <div class="form-card">
+    <div class="step-header"><div class="step-num">3</div><div><div class="form-title" style="margin:0">Claude AI 复盘</div><div class="step-sub">填入后每笔交易自动生成 AI 归因分析</div></div></div>
+    <div style="margin-top:16px">
+      <div style="font-size:13px;color:var(--text2);margin-bottom:12px">获取：<a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a> → API Keys → Create Key</div>
+      <div class="form-group" style="max-width:460px;margin-bottom:10px"><label class="form-label">Anthropic API Key</label><input type="password" id="apiKeyInput" placeholder="sk-ant-api03-..."></div>
+      <div style="font-size:11px;color:var(--warn);margin-bottom:12px">⚠ Key 只存本地浏览器，不经过任何服务器</div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveApiKey()">保存</button>
+        <button class="btn btn-ghost" onclick="clearApiKey()">清除</button>
+      </div>
+      <div id="apiKeyStatus" style="font-size:12px;margin-top:8px;color:var(--win)"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-title">编辑交易记录</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">股票名称</label><input id="e-stock"></div>
+      <div class="form-group"><label class="form-label">市场</label><select id="e-market"><option value="us">美股</option><option value="hk">港股</option><option value="cn">A股</option></select></div>
+      <div class="form-group"><label class="form-label">方向</label><select id="e-dir"><option value="buy">买入</option><option value="sell">卖出</option></select></div>
+      <div class="form-group"><label class="form-label">板块</label><select id="e-sector"><option value="ai">AI/半导体</option><option value="consumer">大消费</option><option value="internet">互联网</option><option value="macro">宏观</option><option value="other">其他</option></select></div>
+      <div class="form-group"><label class="form-label">入场价</label><input id="e-entry" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">出场/现价</label><input id="e-exit" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">MFE（最高价）</label><input id="e-mfe" type="number" step="0.01"></div>
+      <div class="form-group"><label class="form-label">MAE（最低价）</label><input id="e-mae" type="number" step="0.01"></div>
+      <div class="form-group full"><label class="form-label">入场逻辑</label><textarea id="e-logic"></textarea></div>
+      <div class="form-group full"><label class="form-label">实际结果</label><textarea id="e-result"></textarea></div>
+      <div class="form-group full"><label class="form-label">自我反思</label><textarea id="e-reflect"></textarea></div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-primary" onclick="saveEdit()">保存</button><button class="btn btn-ghost" onclick="document.getElementById('editModal').style.display='none'">取消</button></div>
+  </div>
+</div>
+
+<!-- Diary Editor Modal -->
+<div class="modal-overlay" id="diaryModal" style="display:none" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal-box">
+    <div class="modal-title">今日交易日记</div>
+    <div class="form-group" style="margin-bottom:12px"><label class="form-label">日期</label><input type="date" id="d-date"></div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">今日状态</label>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="mood-btn" id="mood-good" onclick="setMood('good')">😊 顺手</button>
+        <button class="mood-btn" id="mood-neutral" onclick="setMood('neutral')">😐 一般</button>
+        <button class="mood-btn" id="mood-bad" onclick="setMood('bad')">😔 糟糕</button>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><label class="form-label">今日复盘 / 想法</label><textarea id="d-content" style="min-height:140px" placeholder="今天市场怎么样？有什么操作？心态如何？下次要注意什么？"></textarea></div>
+    <div class="modal-actions"><button class="btn btn-primary" onclick="saveDiary()">保存日记</button><button class="btn btn-ghost" onclick="document.getElementById('diaryModal').style.display='none'">取消</button></div>
+  </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox" id="lightbox" style="display:none" onclick="this.style.display='none'">
+  <img id="lightboxImg" src="">
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  CONSTANTS & STATE
+// ══════════════════════════════════════════
+const SK = 'inv_j_trades_v3';
+const DK = 'inv_j_diary_v1';
+const AK = 'inv_j_apikey';
+const GCK = 'inv_j_gclient';
+const GTK = 'inv_j_gtoken';
+const GFK = 'inv_j_gfileid';
+const GDRIVE_FILE = 'investment-journal-v2.json';
+
+let trades = JSON.parse(localStorage.getItem(SK) || '[]');
+let diary  = JSON.parse(localStorage.getItem(DK) || '[]');
+let editingId = null;
+let currentFilter = 'all';
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let currentMood = 'neutral';
+let gToken = localStorage.getItem(GTK) || '';
+let gFileId = localStorage.getItem(GFK) || '';
+let chartInstances = {};
+
+const MARKET = {us:'美股',hk:'港股',cn:'A股'};
+const SECTOR = {ai:'AI/半导体',consumer:'大消费',internet:'互联网',macro:'宏观',other:'其他'};
+const ERR_LABEL = {emotion:'情绪化决策',logic:'逻辑缺陷',timing:'时机偏差',sizing:'仓位错误',overconfident:'过度自信'};
+const ERR_CLASS = {emotion:'et-emotion',logic:'et-logic',timing:'et-timing',sizing:'et-sizing',overconfident:'et-overconfident'};
+const SECTOR_COLORS = {ai:'#185FA5',consumer:'#2D6A2D',internet:'#534AB7',macro:'#854F0B',other:'#6B6355'};
+const MARKET_COLORS = {us:'#185FA5',hk:'#9B2222',cn:'#2D6A2D'};
+
+// Seed demo data
+if (!trades.length) {
+  trades = [
+    {id:1,stock:'英伟达 NVDA',market:'us',dir:'buy',sector:'ai',entry:920,exit:1087,mfe:1120,mae:848,days:60,date:'2025-03-15',pnl:18.15,outcome:'win',logic:'Blackwell架构发布后供货改善信号明显，云厂商资本开支指引持续上调，AI算力链核心受益标的，RSI回落到合理区间，分批建仓。',result:'持有约2个月后获利约18%出局。期间经历了一次-8%的最大回撤，差点止损出局，但最终靠住了。财报超预期是最主要的催化剂。',reflect:'判断逻辑完全正确，但仓位只做了计划的60%，原因是高位恐惧。逻辑对了但没赚够。',aiReview:'你的入场逻辑清晰且有基本面支撑。核心问题是仓位管理——只执行了60%计划仓位，暴露了「高位恐惧」心理偏差。在逻辑验证充分时应执行完整仓位。建议：设定分批入场节点（分3次各1/3），以规则代替情绪。',errors:['sizing'],chartImg:''},
+    {id:2,stock:'阿里巴巴 BABA',market:'us',dir:'buy',sector:'internet',entry:95,exit:78,mfe:98,mae:74,days:45,date:'2025-01-20',pnl:-17.89,outcome:'lose',logic:'估值极低，P/E仅10倍，管理层大规模回购，云业务增速边际改善，认为是极好的抄底机会。',result:'买入后持续下跌，最大亏损-22%，最终-18%止损出局。国内消费复苏不及预期，监管不确定性升温。',reflect:'太相信"便宜即是好"，没有等待明确反转催化剂。入场完全是自己的判断，没有等市场验证信号。',aiReview:'典型的「价值陷阱」案例。低估值不是买入理由——便宜的东西可以更便宜。缺少：①反转触发因素；②监管风险量化；③明确止损纪律。建议：对困境反转标的采用「催化剂驱动入场法」，等财报/政策出现积极信号再建仓。',errors:['logic','timing','emotion'],chartImg:''},
+    {id:3,stock:'中际旭创 300308',market:'cn',dir:'buy',sector:'ai',entry:68,exit:82,mfe:96,mae:65,days:42,date:'2025-02-10',pnl:20.59,outcome:'win',logic:'AI数据中心建设加速，800G光模块订单激增，国内光模块龙头直接受益，技术面突破关键阻力位。',result:'持有6周，获利约20%在阶段性高点减仓。后续又涨了15%，减仓略早。',reflect:'核心判断准确，执行也基本到位。问题是减仓略早，达到目标价就机械止盈，没有动态调整。',aiReview:'高质量交易，值得作为参考模板。减仓偏早属于「提前止盈」偏差。对有持续催化剂的强势标的，建议采用「动态止盈」——以跌破5日均线或逻辑出现负面变化作为减仓信号，而非固定目标价。',errors:['timing'],chartImg:''},
+    {id:4,stock:'茅台 600519',market:'cn',dir:'buy',sector:'consumer',entry:1580,exit:1620,mfe:1680,mae:1540,days:30,date:'2025-04-01',pnl:2.53,outcome:'win',logic:'一季报超预期，量价齐升，高端白酒消费复苏信号，估值在历史中位附近，配置性价比高。',result:'持有一个月小幅盈利出局。市场整体回调，没有发挥更大弹性。',reflect:'判断方向对但时机稍早，后续继续上涨。应该持有更长时间。',aiReview:'交易逻辑清晰，基本面支撑强。问题是持仓时间过短，对消费复苏主线的确定性认识不足，导致过早离场。建议：对有明确长期逻辑的配置型标的，设定季度级别的持仓框架，避免短期波动干扰判断。',errors:['timing'],chartImg:''},
+    {id:5,stock:'腾讯控股 0700',market:'hk',dir:'buy',sector:'internet',entry:380,exit:415,mfe:428,mae:365,days:55,date:'2025-02-28',pnl:9.21,outcome:'win',logic:'微信视频号广告收入超预期，游戏版号正常化，回购力度加大，港股互联网估值修复逻辑持续。',result:'持有约2个月，获利9%出局。整体执行较好，没有太大情绪波动。',reflect:'这笔交易相对顺手，逻辑和执行都比较匹配。唯一的问题是仓位可以再重一些。',aiReview:'执行质量较高，逻辑、时机、止盈都做得不错。仓位偏轻是主要遗憾，说明对港股整体风险的担忧高于逻辑本身的置信度。建议：建立一套仓位与置信度挂钩的量化标准，而非凭感觉决定仓位大小。',errors:['sizing'],chartImg:''},
+  ];
+  saveTrades();
+}
+
+// ══════════════════════════════════════════
+//  STORAGE
+// ══════════════════════════════════════════
+function saveTrades() {
+  localStorage.setItem(SK, JSON.stringify(trades));
+  saveDiaryStore();
+  updateStorageStatus();
+  if (gToken) syncToDrive(true);
+}
+function saveDiaryStore() { localStorage.setItem(DK, JSON.stringify(diary)); }
+function getApiKey() { return localStorage.getItem(AK) || ''; }
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+function showView(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  // Render specific views
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'calendar') renderCalendar();
+  if (id === 'charts') renderCharts('curve');
+  if (id === 'log') renderTrades();
+  if (id === 'diary') renderDiary();
+  if (id === 'sectors') renderSectors();
+  if (id === 'insights') {};
+  if (id === 'errors') renderErrors();
+  if (id === 'settings') loadSettings();
+}
+
+// ══════════════════════════════════════════
+//  STATS
+// ══════════════════════════════════════════
+function calcStats() {
+  if (!trades.length) return {};
+  const wins = trades.filter(t => t.outcome === 'win');
+  const loses = trades.filter(t => t.outcome === 'lose');
+  const avgWin = wins.length ? wins.reduce((a,t)=>a+t.pnl,0)/wins.length : 0;
+  const avgLoss = loses.length ? loses.reduce((a,t)=>a+t.pnl,0)/loses.length : 0;
+  const profitFactor = avgLoss !== 0 ? Math.abs(avgWin / avgLoss) : 999;
+  const maxDD = calcMaxDrawdown();
+  return {
+    total: trades.length, wins: wins.length, loses: loses.length,
+    winRate: (wins.length/trades.length*100).toFixed(1),
+    avgWin: avgWin.toFixed(1), avgLoss: avgLoss.toFixed(1),
+    profitFactor: profitFactor.toFixed(2), maxDD: maxDD.toFixed(1),
+  };
+}
+
+function calcMaxDrawdown() {
+  if (!trades.length) return 0;
+  const sorted = [...trades].sort((a,b) => new Date(a.date)-new Date(b.date));
+  let peak = 100, val = 100, maxDD = 0;
+  sorted.forEach(t => {
+    val *= (1 + t.pnl/100);
+    if (val > peak) peak = val;
+    const dd = (peak - val)/peak*100;
+    if (dd > maxDD) maxDD = dd;
+  });
+  return maxDD;
+}
+
+// ══════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════
+function renderDashboard() {
+  const s = calcStats();
+  if (!trades.length) {
+    document.getElementById('statsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:20px">还没有交易记录</div>';
+    document.getElementById('recentTrades').innerHTML = '';
+    return;
+  }
+  document.getElementById('dash-sub').textContent = `共 ${s.total} 笔交易 · 更新于 ${new Date().toLocaleDateString('zh-CN')}`;
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">总交易</div><div class="stat-val c-accent">${s.total}</div><div class="stat-sub">${s.wins}盈 / ${s.loses}亏</div></div>
+    <div class="stat-card"><div class="stat-label">胜率</div><div class="stat-val ${parseFloat(s.winRate)>=50?'c-win':'c-lose'}">${s.winRate}%</div><div class="stat-sub">历史命中率</div></div>
+    <div class="stat-card"><div class="stat-label">盈亏比</div><div class="stat-val ${parseFloat(s.profitFactor)>=1?'c-win':'c-lose'}">${s.profitFactor}</div><div class="stat-sub">均盈 / 均亏</div></div>
+    <div class="stat-card"><div class="stat-label">最大回撤</div><div class="stat-val c-lose">-${s.maxDD}%</div><div class="stat-sub">累计最大亏损</div></div>
+    <div class="stat-card"><div class="stat-label">平均盈利</div><div class="stat-val c-win">+${s.avgWin}%</div><div class="stat-sub">均亏 ${s.avgLoss}%</div></div>`;
+
+  // Mini curve chart
+  destroyChart('miniCurveChart');
+  const sorted = [...trades].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let val = 100;
+  const curveData = sorted.map(t => { val*=(1+t.pnl/100); return parseFloat(val.toFixed(2)); });
+  const ctx = document.getElementById('miniCurveChart').getContext('2d');
+  chartInstances['miniCurveChart'] = new Chart(ctx, {
+    type:'line',
+    data:{labels:sorted.map(t=>t.date),datasets:[{data:[100,...curveData],borderColor:'#1A3A5C',fill:true,backgroundColor:'rgba(26,58,92,.08)',tension:.4,pointRadius:0,borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false}}}
+  });
+
+  // Sector donut
+  destroyChart('sectorChart');
+  const sectorPnl = {};
+  trades.forEach(t => { sectorPnl[t.sector] = (sectorPnl[t.sector]||0) + t.pnl; });
+  const ctx2 = document.getElementById('sectorChart').getContext('2d');
+  const sectors = Object.keys(sectorPnl);
+  chartInstances['sectorChart'] = new Chart(ctx2, {
+    type:'doughnut',
+    data:{labels:sectors.map(s=>SECTOR[s]),datasets:[{data:sectors.map(s=>Math.abs(sectorPnl[s])),backgroundColor:sectors.map(s=>SECTOR_COLORS[s]||'#999')}]},
+    options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:10}}}}
+  });
+
+  // Recent 3 trades
+  const recent = [...trades].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0,3);
+  document.getElementById('recentTrades').innerHTML = recent.map(t => {
+    const col = t.pnl>=0?'var(--win)':'var(--lose)';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <span style="font-size:14px;font-weight:500">${t.stock}</span>
+        <span class="badge b-${t.market}" style="margin-left:6px">${MARKET[t.market]}</span>
+        <span class="badge b-${t.dir}" style="margin-left:4px">${t.dir==='buy'?'买入':'卖出'}</span>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.date} · ${SECTOR[t.sector]}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--mono);font-size:16px;font-weight:500;color:${col}">${t.pnl>=0?'+':''}${t.pnl.toFixed(2)}%</div>
+        <div style="font-size:11px;color:var(--text3)">${t.entry} → ${t.exit}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  CALENDAR
+// ══════════════════════════════════════════
+function renderCalendar() {
+  const DAY_NAMES = ['日','一','二','三','四','五','六'];
+  document.getElementById('calDayNames').innerHTML = DAY_NAMES.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  document.getElementById('calMonth').textContent = `${calYear}年 ${calMonth+1}月`;
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+
+  // Group trades by date
+  const byDate = {};
+  trades.forEach(t => {
+    const d = t.date;
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(t);
+  });
+
+  let html = '';
+  for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dayTrades = byDate[dateStr] || [];
+    const totalPnl = dayTrades.reduce((a,t)=>a+t.pnl,0);
+    const hasWin = dayTrades.some(t=>t.outcome==='win');
+    const hasLose = dayTrades.some(t=>t.outcome==='lose');
+    let cls = 'cal-day';
+    if (dayTrades.length) cls += totalPnl>=0?' win-day':' lose-day';
+    html += `<div class="${cls}" onclick="showDayDetail('${dateStr}')">
+      <div class="cal-date">${d}</div>
+      ${dayTrades.length ? `<div class="cal-pnl" style="color:${totalPnl>=0?'var(--win)':'var(--lose)'}">${totalPnl>=0?'+':''}${totalPnl.toFixed(1)}%</div><div class="cal-count">${dayTrades.length}笔</div>` : ''}
+    </div>`;
+  }
+  document.getElementById('calGrid').innerHTML = html;
+  document.getElementById('calDayDetail').style.display = 'none';
+}
+function calPrev() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function calNext() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+function showDayDetail(dateStr) {
+  const dayTrades = trades.filter(t=>t.date===dateStr);
+  const el = document.getElementById('calDayDetail');
+  if (!dayTrades.length) { el.style.display='none'; return; }
+  el.style.display = 'block';
+  el.innerHTML = `<div style="font-family:var(--serif);font-size:16px;margin-bottom:12px">${dateStr} 的交易</div>` +
+    dayTrades.map(t=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+      <span>${t.stock} <span class="badge b-${t.dir}">${t.dir==='buy'?'买入':'卖出'}</span></span>
+      <span style="font-family:var(--mono);color:${t.pnl>=0?'var(--win)':'var(--lose)'}">${t.pnl>=0?'+':''}${t.pnl.toFixed(2)}%</span>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  P&L CHARTS
+// ══════════════════════════════════════════
+let currentChartTab = 'curve';
+function destroyChart(id) { if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];} }
+
+function switchChartTab(tab, btn) {
+  currentChartTab = tab;
+  document.querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCharts(tab);
+}
+
+function renderCharts(tab) {
+  destroyChart('mainChart');
+  const sorted = [...trades].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const ctx = document.getElementById('mainChart').getContext('2d');
+
+  if (tab === 'curve') {
+    let val = 100;
+    const vals = [100];
+    sorted.forEach(t => { val*=(1+t.pnl/100); vals.push(parseFloat(val.toFixed(2))); });
+    chartInstances['mainChart'] = new Chart(ctx, {
+      type:'line',
+      data:{labels:['起始',...sorted.map(t=>t.date)],datasets:[{label:'资金曲线（基准100）',data:vals,borderColor:'#1A3A5C',fill:true,backgroundColor:'rgba(26,58,92,.08)',tension:.4,pointRadius:3,borderWidth:2}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{callback:v=>v+'%',font:{size:11}}}}}
+    });
+  }
+  else if (tab === 'monthly') {
+    const monthly = {};
+    trades.forEach(t => { const m=t.date.slice(0,7); monthly[m]=(monthly[m]||0)+t.pnl; });
+    const months = Object.keys(monthly).sort();
+    chartInstances['mainChart'] = new Chart(ctx, {
+      type:'bar',
+      data:{labels:months,datasets:[{label:'月度累计盈亏%',data:months.map(m=>monthly[m].toFixed(2)),backgroundColor:months.map(m=>monthly[m]>=0?'rgba(45,106,45,.7)':'rgba(155,34,34,.7)')}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11}}},y:{ticks:{callback:v=>v+'%',font:{size:11}}}}}
+    });
+  }
+  else if (tab === 'dist') {
+    const bins = Array(10).fill(0);
+    const labels = ['-20+','-15','-10','-5','0','5','10','15','20','20+'];
+    trades.forEach(t => {
+      const p = t.pnl;
+      if(p<=-20)bins[0]++; else if(p<=-15)bins[1]++; else if(p<=-10)bins[2]++;
+      else if(p<=-5)bins[3]++; else if(p<=0)bins[4]++; else if(p<=5)bins[5]++;
+      else if(p<=10)bins[6]++; else if(p<=15)bins[7]++; else if(p<=20)bins[8]++; else bins[9]++;
+    });
+    chartInstances['mainChart'] = new Chart(ctx, {
+      type:'bar',
+      data:{labels,datasets:[{label:'交易次数',data:bins,backgroundColor:labels.map((_,i)=>i<=4?'rgba(155,34,34,.7)':'rgba(45,106,45,.7)')}]},
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{stepSize:1}}}}
+    });
+  }
+  else if (tab === 'mfe') {
+    const mfeTrades = trades.filter(t=>t.mfe&&t.mae);
+    if (!mfeTrades.length) { ctx.canvas.parentElement.innerHTML += '<div style="text-align:center;color:var(--text3);padding:40px;font-size:13px">还没有记录 MFE/MAE 数据<br>在记录交易时填写最高价和最低价即可</div>'; return; }
+    const mfeData = mfeTrades.map(t=>((t.mfe-t.entry)/t.entry*100).toFixed(1));
+    const maeData = mfeTrades.map(t=>((t.mae-t.entry)/t.entry*100).toFixed(1));
+    chartInstances['mainChart'] = new Chart(ctx, {
+      type:'bar',
+      data:{labels:mfeTrades.map(t=>t.stock),datasets:[
+        {label:'MFE 最大浮盈%',data:mfeData,backgroundColor:'rgba(45,106,45,.7)'},
+        {label:'MAE 最大浮亏%',data:maeData,backgroundColor:'rgba(155,34,34,.7)'},
+        {label:'实际盈亏%',data:mfeTrades.map(t=>t.pnl.toFixed(1)),backgroundColor:'rgba(26,58,92,.7)'}
+      ]},
+      options:{responsive:true,scales:{x:{ticks:{font:{size:11}}},y:{ticks:{callback:v=>v+'%',font:{size:11}}}}}
+    });
+  }
+
+  // Performance stats
+  const s = calcStats();
+  document.getElementById('perfStats').innerHTML = `
+    <div class="stat-card"><div class="stat-label">盈亏比</div><div class="stat-val ${parseFloat(s.profitFactor)>=1?'c-win':'c-lose'}">${s.profitFactor||'—'}</div><div class="stat-sub">Profit Factor</div></div>
+    <div class="stat-card"><div class="stat-label">最大回撤</div><div class="stat-val c-lose">-${s.maxDD||0}%</div><div class="stat-sub">Max Drawdown</div></div>
+    <div class="stat-card"><div class="stat-label">均盈</div><div class="stat-val c-win">+${s.avgWin||0}%</div><div class="stat-sub">Avg Win</div></div>
+    <div class="stat-card"><div class="stat-label">均亏</div><div class="stat-val c-lose">${s.avgLoss||0}%</div><div class="stat-sub">Avg Loss</div></div>`;
+}
+
+// ══════════════════════════════════════════
+//  TRADE LOG
+// ══════════════════════════════════════════
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrades();
+}
+
+function getFilteredTrades() {
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  return [...trades].sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(t => {
+    const matchQ = !q || t.stock.toLowerCase().includes(q);
+    const matchF = currentFilter==='all' || t.outcome===currentFilter || t.market===currentFilter || t.sector===currentFilter;
+    return matchQ && matchF;
+  });
+}
+
+function renderTrades() {
+  const list = document.getElementById('tradeList');
+  const filtered = getFilteredTrades();
+  if (!filtered.length) { list.innerHTML = '<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">没有匹配的记录</div></div>'; return; }
+  list.innerHTML = filtered.map(t => buildTradeCard(t)).join('');
+}
+
+function buildTradeCard(t) {
+  const col = t.pnl>=0 ? 'var(--win)' : 'var(--lose)';
+  const pnlStr = (t.pnl>=0?'+':'') + t.pnl.toFixed(2) + '%';
+  const errorTags = (t.errors||[]).map(e=>`<span class="etag ${ERR_CLASS[e]||''}">${ERR_LABEL[e]||e}</span>`).join('');
+  const mfeVal = t.mfe ? ((t.mfe-t.entry)/t.entry*100).toFixed(1) : null;
+  const maeVal = t.mae ? ((t.mae-t.entry)/t.entry*100).toFixed(1) : null;
+  return `<div class="trade-card">
+    <div class="trade-accent" style="background:${col}"></div>
+    <div class="trade-body">
+      <div class="trade-header">
+        <div>
+          <div class="trade-name">${t.stock}</div>
+          <div class="trade-meta">${t.date}${t.days?' · 持有'+t.days+'天':''}</div>
+          <div class="badges">
+            <span class="badge b-${t.market}">${MARKET[t.market]}</span>
+            <span class="badge b-${t.dir}">${t.dir==='buy'?'买入':'卖出'}</span>
+            <span class="badge" style="background:${SECTOR_COLORS[t.sector]}22;color:${SECTOR_COLORS[t.sector]}">${SECTOR[t.sector]}</span>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="pnl-big" style="color:${col}">${pnlStr}</div>
+          <div class="price-row">${t.entry} → ${t.exit}</div>
+          <div style="display:flex;gap:5px;justify-content:flex-end;margin-top:8px">
+            <button class="btn-sm" onclick="editTrade(${t.id})">编辑</button>
+            <button class="btn-sm btn-danger" onclick="deleteTrade(${t.id})">删除</button>
+          </div>
+        </div>
+      </div>
+      ${(mfeVal||maeVal) ? `<div class="mfe-row">
+        ${mfeVal?`<div class="mfe-card" style="background:var(--win-bg)"><div class="mfe-label">MFE 最大浮盈</div><div class="mfe-val c-win">+${mfeVal}%</div></div>`:''}
+        ${maeVal?`<div class="mfe-card" style="background:var(--lose-bg)"><div class="mfe-label">MAE 最大浮亏</div><div class="mfe-val c-lose">${maeVal}%</div></div>`:''}
+      </div>` : ''}
+      <div class="divider"></div>
+      <div class="field-label">入场逻辑</div><div class="field-text">${t.logic||'（未填写）'}</div>
+      <div class="field-label">实际结果</div><div class="field-text">${t.result||'（未填写）'}</div>
+      <div class="field-label">自我反思</div><div class="field-text" style="margin-bottom:${errorTags?'8px':'4px'}">${t.reflect||'（未填写）'}</div>
+      ${errorTags?`<div style="margin-bottom:10px">${errorTags}</div>`:''}
+      ${t.chartImg?`<div class="chart-img-wrap"><img src="${t.chartImg}" alt="K线截图" onclick="document.getElementById('lightboxImg').src=this.src;document.getElementById('lightbox').style.display='flex'"></div>`:''}
+      ${t.aiReview
+        ? `<div class="ai-box"><div class="ai-box-label">AI 复盘</div><div class="ai-box-text">${t.aiReview}</div></div>`
+        : `<button class="btn-sm" style="margin-top:8px" id="aibtn-${t.id}" onclick="getAIReview(${t.id})">🤖 请求 AI 复盘</button>`}
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════
+//  ADD / EDIT TRADE
+// ══════════════════════════════════════════
+let pendingChartImg = '';
+function previewChart(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    pendingChartImg = ev.target.result;
+    document.getElementById('chartPreview').innerHTML = `<div class="chart-img-wrap" style="margin-top:8px"><img src="${pendingChartImg}" style="max-height:180px;object-fit:contain;background:#000"></div>`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitTrade() {
+  const stock = document.getElementById('f-stock').value.trim();
+  const entry = parseFloat(document.getElementById('f-entry').value);
+  const exit  = parseFloat(document.getElementById('f-exit').value);
+  if (!stock) { alert('请填写股票名称'); return; }
+  if (isNaN(entry)||isNaN(exit)) { alert('请填写入场价和出场/现价'); return; }
+  const mfe = parseFloat(document.getElementById('f-mfe').value)||null;
+  const mae = parseFloat(document.getElementById('f-mae').value)||null;
+  const pnl = ((exit-entry)/entry*100);
+  const t = {
+    id:Date.now(), stock, market:document.getElementById('f-market').value,
+    dir:document.getElementById('f-dir').value, sector:document.getElementById('f-sector').value,
+    entry, exit, mfe, mae, pnl, outcome:pnl>=0?'win':'lose',
+    days:parseInt(document.getElementById('f-days').value)||null,
+    date:document.getElementById('f-date').value||new Date().toISOString().slice(0,10),
+    logic:document.getElementById('f-logic').value.trim(),
+    result:document.getElementById('f-result').value.trim(),
+    reflect:document.getElementById('f-reflect').value.trim(),
+    chartImg:pendingChartImg, errors:[], aiReview:'',
+  };
+  trades.push(t); saveTrades(); clearForm();
+  showView('log', document.querySelectorAll('.nav-btn')[3]);
+  renderTrades();
+  setTimeout(()=>getAIReview(t.id), 400);
+}
+
+function clearForm() {
+  ['f-stock','f-entry','f-exit','f-mfe','f-mae','f-days','f-logic','f-result','f-reflect'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('chartPreview').innerHTML = '';
+  pendingChartImg = '';
+}
+
+function editTrade(id) {
+  const t = trades.find(x=>x.id===id); if(!t) return;
+  editingId = id;
+  ['stock','market','dir','sector','entry','exit','mfe','mae','logic','result','reflect'].forEach(k=>{
+    const el = document.getElementById('e-'+k); if(el) el.value = t[k]||'';
+  });
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+function saveEdit() {
+  const t = trades.find(x=>x.id===editingId); if(!t) return;
+  const entry=parseFloat(document.getElementById('e-entry').value);
+  const exit=parseFloat(document.getElementById('e-exit').value);
+  ['stock','market','dir','sector','logic','result','reflect'].forEach(k=>{t[k]=document.getElementById('e-'+k).value.trim();});
+  t.entry=entry; t.exit=exit;
+  t.mfe=parseFloat(document.getElementById('e-mfe').value)||null;
+  t.mae=parseFloat(document.getElementById('e-mae').value)||null;
+  t.pnl=((exit-entry)/entry*100); t.outcome=t.pnl>=0?'win':'lose';
+  t.aiReview='';
+  saveTrades();
+  document.getElementById('editModal').style.display='none';
+  renderTrades();
+}
+
+function deleteTrade(id) {
+  if(!confirm('确认删除这条记录？')) return;
+  trades = trades.filter(t=>t.id!==id); saveTrades(); renderTrades();
+}
+
+// ══════════════════════════════════════════
+//  AI REVIEW
+// ══════════════════════════════════════════
+async function getAIReview(id) {
+  const t = trades.find(x=>x.id===id); if(!t) return;
+  const apiKey = getApiKey();
+  if (!apiKey) { alert('请先在「设置」页面配置 Claude API Key'); return; }
+  const btn = document.getElementById('aibtn-'+id);
+  if (btn) btn.innerHTML = '<span class="loading-inline"><span class="spinner"></span>AI分析中...</span>';
+
+  const prompt = `请对以下投资交易进行专业复盘分析：
+
+股票：${t.stock}（${MARKET[t.market]}·${SECTOR[t.sector]}）
+操作：${t.dir==='buy'?'买入':'卖出'}，入场${t.entry}→出场${t.exit}（${t.pnl>=0?'盈利':'亏损'}${Math.abs(t.pnl).toFixed(1)}%）${t.days?'，持有'+t.days+'天':''}
+${t.mfe?`MFE最大浮盈：+${((t.mfe-t.entry)/t.entry*100).toFixed(1)}%`:''}
+${t.mae?`MAE最大浮亏：${((t.mae-t.entry)/t.entry*100).toFixed(1)}%`:''}
+
+【入场逻辑】${t.logic||'未填写'}
+【实际结果】${t.result||'未填写'}
+【自我反思】${t.reflect||'未填写'}
+
+分析角度：1.逻辑质量 2.执行问题（时机/仓位/止损）3.行为偏差 4.一条最核心可操作的改进建议
+要求：第二人称，专业直接，120-150字，聚焦最重要问题。`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    const data = await resp.json();
+    if (data.error) throw new Error(data.error.message);
+    t.aiReview = data.content?.map(b=>b.text||'').join('')||'分析失败';
+    const r = t.aiReview;
+    const detected=[];
+    if(/情绪|恐惧|贪|冲动/.test(r)) detected.push('emotion');
+    if(/逻辑|分析不足|催化剂|基本面/.test(r)) detected.push('logic');
+    if(/时机|过早|太晚|等待/.test(r)) detected.push('timing');
+    if(/仓位|止损|轻仓|重仓/.test(r)) detected.push('sizing');
+    if(/过度自信|高估/.test(r)) detected.push('overconfident');
+    t.errors=[...new Set([...(t.errors||[]),...detected])];
+  } catch(e) { t.aiReview=`分析失败：${e.message}`; }
+  saveTrades(); renderTrades();
+}
+
+// ══════════════════════════════════════════
+//  DIARY
+// ══════════════════════════════════════════
+function renderDiary() {
+  const list = document.getElementById('diaryList');
+  if (!diary.length) { list.innerHTML='<div class="empty"><div class="empty-icon">✍️</div><div class="empty-title">还没有日记</div><div class="empty-sub">点击右上角开始写今天的复盘日记</div></div>'; return; }
+  const sorted=[...diary].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const moodEmoji={good:'😊',neutral:'😐',bad:'😔'};
+  const moodLabel={good:'顺手',neutral:'一般',bad:'糟糕'};
+  list.innerHTML=sorted.map(d=>`<div class="diary-card">
+    <div class="diary-date">${d.date} ${moodEmoji[d.mood]||'😐'} ${moodLabel[d.mood]||''}</div>
+    <div class="diary-text">${d.content||''}</div>
+    <button class="btn-sm btn-danger" style="margin-top:10px" onclick="deleteDiary('${d.id}')">删除</button>
+  </div>`).join('');
+}
+
+function openDiaryEditor() {
+  currentMood='neutral';
+  document.getElementById('d-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('d-content').value='';
+  ['good','neutral','bad'].forEach(m=>{document.getElementById('mood-'+m).className='mood-btn';});
+  document.getElementById('mood-neutral').classList.add('active-neutral');
+  document.getElementById('diaryModal').style.display='flex';
+}
+
+function setMood(m) {
+  currentMood=m;
+  const cls={good:'active-good',neutral:'active-neutral',bad:'active-bad'};
+  ['good','neutral','bad'].forEach(x=>{document.getElementById('mood-'+x).className='mood-btn';});
+  document.getElementById('mood-'+m).classList.add(cls[m]);
+}
+
+function saveDiary() {
+  const content=document.getElementById('d-content').value.trim();
+  if(!content){alert('请填写日记内容');return;}
+  const d={id:Date.now().toString(),date:document.getElementById('d-date').value,mood:currentMood,content};
+  diary.push(d); saveDiaryStore();
+  document.getElementById('diaryModal').style.display='none';
+  renderDiary();
+}
+
+function deleteDiary(id) {
+  if(!confirm('删除这条日记？'))return;
+  diary=diary.filter(d=>d.id!==id); saveDiaryStore(); renderDiary();
+}
+
+// ══════════════════════════════════════════
+//  SECTORS
+// ══════════════════════════════════════════
+function renderSectors() {
+  const sectors = ['ai','consumer','internet','macro','other'];
+  const grid = document.getElementById('sectorGrid');
+  grid.innerHTML = sectors.map(s => {
+    const st = trades.filter(t=>t.sector===s);
+    if(!st.length) return `<div class="sector-card"><div class="sector-name" style="color:${SECTOR_COLORS[s]}">${SECTOR[s]}</div><div style="font-size:12px;color:var(--text3)">暂无记录</div></div>`;
+    const wins=st.filter(t=>t.outcome==='win');
+    const wr=(wins.length/st.length*100).toFixed(0);
+    const avgPnl=(st.reduce((a,t)=>a+t.pnl,0)/st.length).toFixed(1);
+    return `<div class="sector-card">
+      <div class="sector-name" style="color:${SECTOR_COLORS[s]}">${SECTOR[s]}</div>
+      <div class="sector-bar-track"><div class="sector-bar-fill" style="width:${wr}%;background:${SECTOR_COLORS[s]}"></div></div>
+      <div class="sector-stats">
+        <span>胜率 ${wr}%</span><span>${st.length}笔</span><span style="color:${parseFloat(avgPnl)>=0?'var(--win)':'var(--lose)'}">${parseFloat(avgPnl)>=0?'+':''}${avgPnl}%均</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Sector × Market chart
+  destroyChart('sectorMarketChart');
+  const markets=['us','hk','cn'];
+  const datasets=markets.map(m=>({
+    label:MARKET[m],
+    data:sectors.map(s=>{const st=trades.filter(t=>t.sector===s&&t.market===m);return st.length?parseFloat((st.reduce((a,t)=>a+t.pnl,0)/st.length).toFixed(1)):0;}),
+    backgroundColor:MARKET_COLORS[m]+'99',borderColor:MARKET_COLORS[m],borderWidth:1.5,
+  }));
+  const ctx=document.getElementById('sectorMarketChart').getContext('2d');
+  chartInstances['sectorMarketChart']=new Chart(ctx,{
+    type:'bar',
+    data:{labels:sectors.map(s=>SECTOR[s]),datasets},
+    options:{responsive:true,scales:{x:{ticks:{font:{size:11}}},y:{ticks:{callback:v=>v+'%',font:{size:11}}}}}
+  });
+}
+
+// ══════════════════════════════════════════
+//  ERRORS
+// ══════════════════════════════════════════
+function renderErrors() {
+  const all=trades.flatMap(t=>t.errors||[]);
+  const count={};
+  all.forEach(e=>count[e]=(count[e]||0)+1);
+  const sorted=Object.entries(count).sort((a,b)=>b[1]-a[1]);
+  const el=document.getElementById('errorCard');
+  if(!sorted.length){el.innerHTML='<div style="color:var(--text3);font-size:13px">记录更多有 AI 复盘的交易后，这里会自动归纳错误模式。</div>';return;}
+  el.innerHTML=`<div class="card-title">错误频率分布</div>`+
+    sorted.map(([e,n])=>`<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+        <span class="etag ${ERR_CLASS[e]||''}">${ERR_LABEL[e]||e}</span>
+        <span style="color:var(--text3)">${n}次 / ${trades.length}笔（${(n/trades.length*100).toFixed(0)}%）</span>
+      </div>
+      <div style="height:5px;background:var(--surface2);border-radius:3px"><div style="height:100%;border-radius:3px;background:var(--accent);width:${(n/trades.length*100).toFixed(0)}%"></div></div>
+    </div>`).join('')+
+    `<div class="tip-box" style="margin-top:14px">你最常见的错误是「${ERR_LABEL[sorted[0][0]]}」，出现在 ${(sorted[0][1]/trades.length*100).toFixed(0)}% 的交易中。针对此项建立入场前的检查清单，将规则置于情绪之上。</div>`;
+}
+
+// ══════════════════════════════════════════
+//  AI INSIGHTS
+// ══════════════════════════════════════════
+async function generateInsight() {
+  const apiKey=getApiKey(); if(!apiKey){alert('请先配置 API Key');return;}
+  if(!trades.length){alert('还没有交易记录');return;}
+  const btn=document.getElementById('insightBtn');
+  btn.disabled=true; btn.textContent='生成中...';
+  const el=document.getElementById('insightBody');
+  el.innerHTML='<span class="loading-inline"><span class="spinner"></span>分析全部交易记录...</span>';
+  const summary=trades.map(t=>`${t.stock}(${MARKET[t.market]}) ${t.dir==='buy'?'买入':'卖出'} ${t.pnl>=0?'+':''}${t.pnl.toFixed(1)}% | 错误:${(t.errors||[]).map(e=>ERR_LABEL[e]).join(',')||'无'} | 逻辑:${(t.logic||'').slice(0,50)}`).join('\n');
+  const prompt=`以下是一位投资者（关注美股/A股/港股，板块涵盖AI算力链、大消费、互联网）的全部交易复盘记录：\n\n${summary}\n\n请深度分析（200-250字）：\n1.最核心的投资优势（1-2条具体说明）\n2.最需改进的2个系统性问题（各给一条具体改进方法）\n3.哪个板块执行质量最好/最差\n4.未来3个月最重要的一条能力提升建议\n\n语气直接专业，每条建议有操作指导性，不要空话。`;
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    el.style.color='var(--text)'; el.style.whiteSpace='pre-wrap';
+    el.textContent=data.content?.map(b=>b.text||'').join('')||'生成失败';
+  } catch(e){el.textContent='失败：'+e.message;}
+  btn.disabled=false; btn.textContent='重新生成 ↗';
+}
+
+async function generateWeekly() {
+  const apiKey=getApiKey(); if(!apiKey){alert('请先配置 API Key');return;}
+  const el=document.getElementById('weeklyBody');
+  el.innerHTML='<span class="loading-inline"><span class="spinner"></span>生成本周策略...</span>';
+  const prompt=`你是专业投资顾问。生成本周（2026年6月第1周）投资策略建议，覆盖：\n- AI算力链：英伟达/AMD/博通（美股）、中际旭创/澜起科技（A股）\n- 大消费：茅台/安踏（A/港股）、PDD/JD/携程（美股）\n- 互联网：腾讯/阿里（港/美股）\n\n格式：\n【宏观环境】1-2句核心背景\n【本周关注】3个交易机会（标的/逻辑/关注位置）\n【风险提示】1-2条本周需注意的风险\n\n180字以内，信息密度高，直接指导操作。`;
+  try {
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    if(data.error) throw new Error(data.error.message);
+    el.style.color='var(--text)';
+    el.textContent=data.content?.map(b=>b.text||'').join('')||'生成失败';
+  } catch(e){el.textContent='失败：'+e.message;}
+}
+
+// ══════════════════════════════════════════
+//  SETTINGS / STORAGE STATUS
+// ══════════════════════════════════════════
+function updateStorageStatus() {
+  const setDot=(id,on)=>{const el=document.getElementById(id);if(el)el.className='ss-dot'+(on?' on':'');}; 
+  const setVal=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setDot('dot-local',true); setVal('ss-local',`${trades.length} 条记录`);
+  setDot('dot-drive',!!gToken); setVal('ss-drive',gToken?'已连接':'未连接');
+  const hasKey=!!getApiKey();
+  if(document.getElementById('dot-ai')) document.getElementById('dot-ai').className='ss-dot'+(hasKey?' on':' warn');
+  setVal('ss-ai',hasKey?'已配置':'未配置');
+}
+
+function loadSettings() {
+  const k=getApiKey();
+  const inp=document.getElementById('apiKeyInput'); if(inp) inp.value=k?'••••••••'+k.slice(-4):'';
+  const cid=localStorage.getItem(GCK); if(cid&&document.getElementById('gClientId')) document.getElementById('gClientId').value=cid;
+  if(gToken){document.getElementById('gdrive-setup').style.display='none';document.getElementById('gdrive-connected').style.display='block';}
+  else{document.getElementById('gdrive-setup').style.display='block';document.getElementById('gdrive-connected').style.display='none';}
+  updateStorageStatus();
+}
+
+function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(!v||v.startsWith('•')){document.getElementById('apiKeyStatus').textContent='请输入新 Key';return;}localStorage.setItem(AK,v);document.getElementById('apiKeyStatus').textContent='✓ 已保存';document.getElementById('apiKeyInput').value='••••••••'+v.slice(-4);updateStorageStatus();}
+function clearApiKey(){localStorage.removeItem(AK);document.getElementById('apiKeyInput').value='';document.getElementById('apiKeyStatus').textContent='已清除';updateStorageStatus();}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify({trades,diary,exportedAt:new Date().toISOString(),version:3},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`investment-journal-${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+
+function handleImport(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const imp=data.trades||data;
+      if(!Array.isArray(imp)) throw new Error('格式错误');
+      if(!confirm(`导入 ${imp.length} 条记录？（将合并到现有记录）`))return;
+      const ids=new Set(trades.map(t=>t.id));
+      imp.forEach(t=>{if(!ids.has(t.id))trades.push(t);});
+      if(data.diary){const dids=new Set(diary.map(d=>d.id));data.diary.forEach(d=>{if(!dids.has(d.id))diary.push(d);});}
+      saveTrades();alert(`已导入 ${imp.length} 条记录`);
+    }catch(err){alert('导入失败：'+err.message);}
+  };reader.readAsText(file);
+}
+
+function clearAllData(){if(!confirm('确认清空全部记录？不可撤销。'))return;trades=[];diary=[];saveTrades();renderTrades();}
+
+// ── Google Drive ──
+function initGoogleDrive(){
+  const clientId=document.getElementById('gClientId').value.trim();
+  if(!clientId){document.getElementById('gdrive-status').textContent='请填写 Client ID';return;}
+  localStorage.setItem(GCK,clientId);
+  document.getElementById('gdrive-status').textContent='正在打开授权窗口...';
+  const params=new URLSearchParams({client_id:clientId,redirect_uri:window.location.origin+window.location.pathname,response_type:'token',scope:'https://www.googleapis.com/auth/drive.file',state:'gdrive_auth'});
+  const popup=window.open('https://accounts.google.com/o/oauth2/v2/auth?'+params,'google_auth','width=500,height=600');
+  const timer=setInterval(()=>{
+    try{
+      if(!popup||popup.closed){clearInterval(timer);document.getElementById('gdrive-status').textContent='授权窗口已关闭';return;}
+      const hash=popup.location.hash;
+      if(hash&&hash.includes('access_token')){
+        clearInterval(timer);popup.close();
+        const p=new URLSearchParams(hash.slice(1));
+        gToken=p.get('access_token');
+        localStorage.setItem(GTK,gToken);
+        setTimeout(()=>{gToken='';localStorage.removeItem(GTK);updateStorageStatus();loadSettings();},parseInt(p.get('expires_in')||3600)*1000);
+        getGEmail();
+      }
+    }catch(e){}
+  },600);
+}
+
+async function getGEmail(){
+  try{const r=await fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json',{headers:{Authorization:'Bearer '+gToken}});const d=await r.json();document.getElementById('gdrive-email').textContent=d.email||'已登录';}catch(e){}
+  document.getElementById('gdrive-setup').style.display='none';
+  document.getElementById('gdrive-connected').style.display='block';
+  updateStorageStatus();
+  syncToDrive(false);
+}
+
+async function syncToDrive(silent=false){
+  if(!gToken)return;
+  if(!silent)document.getElementById('sync-status').textContent='同步中...';
+  const payload=JSON.stringify({trades,diary,syncedAt:new Date().toISOString(),version:3},null,2);
+  const blob=new Blob([payload],{type:'application/json'});
+  try{
+    if(!gFileId){const s=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE}'+and+trashed=false&fields=files(id)`,{headers:{Authorization:'Bearer '+gToken}})).json();if(s.files?.length){gFileId=s.files[0].id;localStorage.setItem(GFK,gFileId);}}
+    if(gFileId){await fetch(`https://www.googleapis.com/upload/drive/v3/files/${gFileId}?uploadType=media`,{method:'PATCH',headers:{Authorization:'Bearer '+gToken,'Content-Type':'application/json'},body:blob});}
+    else{const form=new FormData();form.append('metadata',new Blob([JSON.stringify({name:GDRIVE_FILE,mimeType:'application/json'})],{type:'application/json'}));form.append('file',blob);const cr=await(await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',headers:{Authorization:'Bearer '+gToken},body:form})).json();gFileId=cr.id;localStorage.setItem(GFK,gFileId);}
+    if(!silent){const ts=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});document.getElementById('sync-status').textContent=`✓ 已同步 · ${ts}`;}
+  }catch(e){if(!silent)document.getElementById('sync-status').textContent='同步失败：'+e.message;}
+}
+
+async function loadFromDrive(){
+  if(!gToken){alert('请先连接 Drive');return;}
+  document.getElementById('sync-status').textContent='读取中...';
+  try{
+    const s=await(await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${GDRIVE_FILE}'+and+trashed=false&fields=files(id)`,{headers:{Authorization:'Bearer '+gToken}})).json();
+    if(!s.files?.length){document.getElementById('sync-status').textContent='Drive 上暂无备份';return;}
+    gFileId=s.files[0].id;localStorage.setItem(GFK,gFileId);
+    const data=await(await fetch(`https://www.googleapis.com/drive/v3/files/${gFileId}?alt=media`,{headers:{Authorization:'Bearer '+gToken}})).json();
+    if(!confirm(`Drive 上有 ${data.trades?.length||0} 条记录，覆盖本地？`))return;
+    trades=data.trades||[];diary=data.diary||[];saveTrades();
+    document.getElementById('sync-status').textContent=`✓ 已恢复 ${trades.length} 条记录`;
+  }catch(e){document.getElementById('sync-status').textContent='恢复失败：'+e.message;}
+}
+
+function disconnectDrive(){if(!confirm('断开 Drive 连接？'))return;gToken='';gFileId='';localStorage.removeItem(GTK);localStorage.removeItem(GFK);loadSettings();}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+(function handleOAuth(){
+  const hash=window.location.hash;
+  if(hash&&hash.includes('access_token')&&hash.includes('state=gdrive_auth')){
+    const p=new URLSearchParams(hash.slice(1));const token=p.get('access_token');
+    if(token){gToken=token;localStorage.setItem(GTK,token);setTimeout(()=>{gToken='';localStorage.removeItem(GTK);updateStorageStatus();},parseInt(p.get('expires_in')||3600)*1000);history.replaceState(null,'',window.location.pathname);}
+  }
+})();
+
+document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+updateStorageStatus();
+renderDashboard();
+</script>
+</body>
+</html>
